@@ -1,0 +1,13 @@
+{
+  "name": "nl-sql-app",
+  "private": true,
+  "workspaces": ["server", "client"],
+  "scripts": {
+    "build": "npm -w server run build && npm -w client run build",
+    "dev": "concurrently -n server,client -c blue,green \"npm -w server run dev\" \"npm -w client run dev\"",
+    "start": "npm -w server run start"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
