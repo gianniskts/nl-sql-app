@@ -1,0 +1,16 @@
+node_modules
+*/node_modules
+.git
+.gitignore
+README.md
+*.log
+.DS_Store
+server/data/*.db
+server/.env
+client/.env
+*.test.ts
+*.test.js
+coverage
+.nyc_output
+.vscode
+.idea

@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3001:3001"  # Only expose the server port
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - CORS_ORIGIN=http://localhost:3001
+      - OPENAI_API_KEY=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
+      - OPENAI_MODEL=gpt-4o-mini
+      - TRANSLATOR=openai
+    volumes:
+      # Persist database
+      - ./server/data:/app/server/data
+    restart: unless-stopped

@@ -9,7 +9,6 @@ const better_sqlite3_1 = __importDefault(require("better-sqlite3"));
 const node_path_1 = __importDefault(require("node:path"));
 const node_fs_1 = __importDefault(require("node:fs"));
 const DB_PATH = node_path_1.default.join(process.cwd(), 'server', 'data', 'app.db');
-// Ensure directory exists
 node_fs_1.default.mkdirSync(node_path_1.default.dirname(DB_PATH), { recursive: true });
 exports.db = new better_sqlite3_1.default(DB_PATH);
 exports.db.pragma('journal_mode = WAL');

@@ -1,46 +1,108 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.openAITranslator = openAITranslator;
-// Uses OpenAI responses API if OPENAI_API_KEY is set. Otherwise do not export this translator.
+/**
+ * OpenAI-based translator for NL→SQL conversion.
+ * Uses OpenAI's Chat Completions API as a widely-recognized NL→SQL service.
+ */
 function openAITranslator() {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey)
         throw new Error('OPENAI_API_KEY is required for OpenAI translator');
     const baseURL = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
     const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
-    async function call(prompt, schema) {
-        const system = `You are a strict SQL generator for SQLite. Return ONLY SQL in a fenced block not needed, just plain SQL string, no prose. Only SELECT or WITH queries. Use the provided schema. Use COUNT(*) AS count when counting. Dates are stored as ISO strings.`;
+    /**
+     * Builds system prompt with schema context
+     */
+    function buildPrompt(schema) {
         const schemaText = schema.tables
-            .map((t) => `${t.table}(${t.columns.join(', ')})`)
-            .join('\n');
-        const content = `${system}\n\nSchema:\n${schemaText}\n\nUser question:\n${prompt}\n\nReturn the SQL only.`;
-        // Use Responses API
-        const res = await fetch(`${baseURL}/responses`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
-                model,
-                input: [{ role: 'user', content }],
-            }),
-        });
-        if (!res.ok) {
-            const t = await res.text();
-            throw new Error(`OpenAI error: ${res.status} ${t}`);
+            .map((t) => `Table: ${t.table}\nColumns: ${t.columns.join(', ')}`)
+            .join('\n\n');
+        const system = `You are a SQL query generator for SQLite databases.
+
+RULES:
+1. Generate ONLY valid SQLite SQL - no explanations, no markdown
+2. Only SELECT or WITH queries allowed (read-only)
+3. Use COUNT(*) AS count when counting rows
+4. Dates are stored as TEXT in ISO format (YYYY-MM-DD)
+5. For date comparisons use: date(column) BETWEEN date('YYYY-MM-DD') AND date('YYYY-MM-DD')
+6. For text matching use LIKE with % wildcards
+7. Use lower() for case-insensitive matching
+
+DATABASE SCHEMA:
+${schemaText}`;
+        return { system, schemaText };
+    }
+    /**
+     * Strips markdown code fences if present
+     */
+    function cleanSqlResponse(text) {
+        // Remove markdown code fences
+        let cleaned = text.replace(/^```[a-zA-Z]*\n?/gm, '').replace(/```$/gm, '');
+        // Remove "sql" prefix if present
+        cleaned = cleaned.replace(/^sql\s+/i, '');
+        // Trim whitespace
+        return cleaned.trim();
+    }
+    /**
+     * Calls OpenAI Chat Completions API
+     */
+    async function generateSql(prompt, schema) {
+        const { system } = buildPrompt(schema);
+        const messages = [
+            { role: 'system', content: system },
+            {
+                role: 'user',
+                content: `Generate SQL for this question: ${prompt}\n\nReturn ONLY the SQL query, nothing else.`
+            }
+        ];
+        try {
+            const response = await fetch(`${baseURL}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                },
+                body: JSON.stringify({
+                    model,
+                    messages,
+                    temperature: 0,
+                    max_tokens: 500,
+                }),
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`OpenAI API error ${response.status}: ${errorText}`);
+            }
+            const data = await response.json();
+            if (!data.choices?.[0]?.message?.content) {
+                throw new Error('Invalid response from OpenAI API');
+            }
+            return cleanSqlResponse(data.choices[0].message.content);
         }
-        const json = await res.json();
-        // Extract text content; structure differs by SDK version; try common paths
-        const text = json.output_text ?? json.response?.output_text ?? json.content?.[0]?.text ?? json.choices?.[0]?.message?.content;
-        if (!text)
-            throw new Error('No text in OpenAI response');
-        return text.trim().replace(/^```[a-z]*\n?|```$/g, '');
+        catch (error) {
+            console.error('OpenAI API call failed:', error);
+            throw error;
+        }
     }
     return {
         async translate(prompt, schema) {
-            const sql = await call(prompt, schema);
-            return { sql, rationale: 'OpenAI responses API' };
+            try {
+                const sql = await generateSql(prompt, schema);
+                // Validate it's a SELECT query
+                const normalizedSql = sql.toLowerCase().trim();
+                if (!normalizedSql.startsWith('select') && !normalizedSql.startsWith('with')) {
+                    throw new Error('Generated non-SELECT query');
+                }
+                return {
+                    sql,
+                    rationale: 'OpenAI Chat Completions API (gpt-4o-mini)'
+                };
+            }
+            catch (error) {
+                // Re-throw to allow fallback in index.ts
+                throw new Error(`OpenAI translation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            }
         },
     };
 }

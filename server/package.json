@@ -1,13 +1,14 @@
 {
   "name": "nl-sql-server",
   "version": "0.1.0",
-  
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "seed": "ts-node src/seed.ts"
+    "seed": "ts-node src/seed.ts",
+    "test": "ts-node src/translator/translator.test.ts",
+    "test:integration": "ts-node src/test-integration.ts"
   },
   "dependencies": {
     "better-sqlite3": "^9.6.0",
