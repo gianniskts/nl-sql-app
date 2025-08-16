@@ -93,6 +93,29 @@ The Docker setup automatically:
    # Access at: http://localhost:3001 (serves both API and static files)
    ```
 
+## 🎬 Demo Flow
+
+1. **Start Application**: 
+   ```bash
+   docker-compose up --build
+   # OR for development:
+   npm run dev
+   ```
+
+2. **Access Interface**: Open http://localhost:3001 (Docker) or http://localhost:5173 (dev)
+
+3. **Test Query 1**: Enter "How many contacts do I have in my database?"
+   - Generates: `SELECT COUNT(*) AS count FROM contacts`
+   - Returns: `127 contacts`
+
+4. **Test Query 2**: Enter "How many cases with topic containing 'help' between 2023 and 2025?"
+   - Generates: Complex WHERE clause with date filtering
+   - Returns: `2 cases`
+
+5. **View Results**: See SQL, summary, and raw JSON data
+   - Server logs show translator used (OpenAI vs Rule-based)
+   - Console output includes query execution details
+
 ### Database Details
 
 - **Type**: SQLite with better-sqlite3
@@ -106,14 +129,46 @@ The Docker setup automatically:
 
 ### Design Decision: OpenAI vs MCP
 
-**Selected**: **OpenAI Chat Completions API** as the primary NL→SQL service
+Selected: OpenAI Chat Completions API as the primary NL→SQL service; MCP is acknowledged as a protocol-level alternative for orchestration and interoperability.
 
-**Why OpenAI Instead of MCP**:
+Why OpenAI Instead of MCP (technical rationale)
+- Role distinction: MCP (Model Context Protocol) standardizes tool discovery, auth, and streaming; it is not itself an NL→SQL model. NL→SQL is a semantic parsing task that benefits from a capable LLM conditioned on schema/context.
+- Task fit: For a small, static schema and single-turn prompts, a single forward pass with explicit schema context achieves high accuracy without multi-step tool planning.
+- Latency/cost:
+  - Single-call LLM: T_openai ≈ t_net + t_model; Cost_openai ≈ tokens_in + tokens_out.
+  - MCP multi-hop (planner + tools): T_mcp ≈ t_orch + Σ(t_net_i + t_model_i) + Σ(t_tool_j); Cost_mcp ≈ Σ tokens_i.
+  - With short prompts and concise SQL outputs, single-pass minimizes both latency and token spend.
+- Reliability surface: Each extra hop (tool discovery, schema tools, planners) adds failure modes (timeouts, partial state). Single-call + validation reduces surface area and raises end-to-end success for this scope.
+- Operations maturity: OpenAI provides predictable rate limits, usage metrics, and retry semantics; simpler SLOs for a demo.
 
-1. **Production-Ready NL→SQL**: OpenAI provides mature, widely-recognized NL→SQL capabilities with GPT-4o-mini
-2. **Industry Standard**: Established service with robust error handling and rate limiting
-3. **MCP Scope**: MCP (Model Context Protocol) is primarily a protocol for connecting AI assistants to data sources, not a dedicated NL→SQL translation service
-4. **Fallback Strategy**: Rule-based translator ensures demo works without API keys
+Scientific framing (what the model solves)
+- Problem: Given natural-language query q and schema S, produce an SQL program s for dialect D=SQLite that maximizes execution accuracy under constraints C (SELECT-only).
+- Subtasks:
+  - Schema linking: map mentions to tables/columns in S (via lexical/semantic cues in the prompt).
+  - Value grounding: normalize literals (dates → ISO), case-insensitive text filters.
+  - Aggregation/join inference: infer COUNT/GROUP BY and minimal join paths consistent with S.
+  - Temporal reasoning: translate intervals (“between 2023 and 2025”) into concrete predicates on created_at.
+- Strategy in this app:
+  - Prompt includes full schema and safety rules; temperature ≤ 0.2 for stability.
+  - Post-generation validators enforce SELECT-only and basic SQL sanity; parameterized execution via better-sqlite3.
+
+Safety and guardrails
+- Disallow non-SELECT statements; reject on detection.
+- Normalize identifiers and enforce COUNT(*) AS count alias for consistent consumption.
+- Schema-scoped prompting to mitigate hallucinated columns/tables.
+
+When MCP is preferable
+- Dynamic/multi-source schemas that must be discovered at runtime via tools.
+- Enterprise needs: unified auth/auditing/logging across assistants and datasets.
+- Model heterogeneity or on-prem requirements behind a standardized protocol.
+- Multi-step workflows (catalog lookup → policy check → NL→SQL → post-processing).
+
+Evaluation methodology (reproducible)
+- Metrics: execution accuracy, latency p50/p95, token cost/query, safety block rate.
+- Protocol: fixed seed dataset and test set (includes the two required prompts), fixed prompts with low temperature; log SQL, outcomes, and timing; optional A/B against rule-based fallback.
+
+Interoperability plan
+- Future: expose schema introspection and read-only query execution as MCP tools while retaining OpenAI as the NL→SQL model; optionally add grammar-constrained decoding or function-calling for tighter outputs.
 
 ### Architecture & Integration
 
@@ -267,14 +322,6 @@ Integration tests verify:
 └── package.json          # Monorepo with workspaces
 ```
 
-## 🎨 UI Features
-
-- **Modern Design**: Glassmorphic design with dark/light theme support
-- **Responsive Layout**: Works on desktop and mobile
-- **Real-time Results**: Shows SQL, summary, and raw data
-- **Error Handling**: Clear error messages with retry capability
-- **Accessibility**: Proper ARIA labels and keyboard navigation
-
 ## ⚖️ Trade-offs & Design Decisions
 
 ### Architectural Choices
@@ -300,44 +347,6 @@ Integration tests verify:
 - **Count Queries**: Always return `COUNT(*) AS count` for consistency
 - **Row Limits**: Rule-based queries limited to 50 rows for safety
 - **API Stability**: OpenAI API structure remains consistent
-
-
-## 🎬 Demo Flow
-
-1. **Start Application**: 
-   ```bash
-   docker-compose up --build
-   # OR for development:
-   npm run dev
-   ```
-
-2. **Access Interface**: Open http://localhost:3001 (Docker) or http://localhost:5173 (dev)
-
-3. **Test Query 1**: Enter "How many contacts do I have in my database?"
-   - Generates: `SELECT COUNT(*) AS count FROM contacts`
-   - Returns: `127 contacts`
-
-4. **Test Query 2**: Enter "How many cases with topic containing 'help' between 2023 and 2025?"
-   - Generates: Complex WHERE clause with date filtering
-   - Returns: `2 cases`
-
-5. **View Results**: See SQL, summary, and raw JSON data
-   - Server logs show translator used (OpenAI vs Rule-based)
-   - Console output includes query execution details
-
-## 📋 Environment Variables Reference
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `PORT` | Server port | `3001` | No |
-| `CORS_ORIGIN` | Allowed origins (comma-separated) | `http://localhost:5173,http://localhost:3001` | No |
-| `OPENAI_API_KEY` | OpenAI API key for translation | - | No* |
-| `OPENAI_MODEL` | OpenAI model to use | `gpt-4o-mini` | No |
-| `OPENAI_BASE_URL` | OpenAI API base URL | `https://api.openai.com/v1` | No |
-| `TRANSLATOR` | Force translator type | `openai` | No |
-| `NODE_ENV` | Environment mode | `development` | No |
-
-*Required for OpenAI translation; app works with rule-based fallback
 
 ---
 
