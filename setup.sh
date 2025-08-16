@@ -25,15 +25,15 @@ npm -w server install
 npm -w client install
 
 # Setup environment
-if [ ! -f "server/.env" ]; then
+if [ ! -f ".env" ]; then
     echo ""
-    echo "🔧 Creating server/.env file..."
-    cp server/.env.example server/.env
-    
+    echo "🔧 Creating .env file..."
+    cp .env.example .env
+
     echo ""
     echo "📝 OpenAI API Setup (optional)"
     echo "To use OpenAI for NL→SQL translation:"
-    echo "1. Edit server/.env"
+    echo "1. Edit .env"
     echo "2. Add your OPENAI_API_KEY"
     echo ""
     echo "The app will work without it using rule-based translation."
