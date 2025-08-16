@@ -7,6 +7,7 @@ exports.getSchemaDescription = getSchemaDescription;
  * for better NL→SQL translation context
  */
 function getSchemaSummary(db) {
+    // Get all user tables (excluding system tables)
     const tables = db.prepare(`
     SELECT name FROM sqlite_master 
     WHERE type='table' 
@@ -25,12 +26,16 @@ function getSchemaSummary(db) {
             rowCount = countResult.count;
         }
         catch {
+            // Table might be empty or have issues
             rowCount = 0;
         }
+        // Get foreign key information
         const foreignKeys = db.prepare(`PRAGMA foreign_key_list(${t.name})`).all();
+        // Document relationships
         for (const fk of foreignKeys) {
             relationships.push(`${t.name}.${fk.from} -> ${fk.table}.${fk.to}`);
         }
+        // Build column details
         const columnDetails = pragma.map(p => ({
             name: p.name,
             type: p.type,
@@ -45,12 +50,14 @@ function getSchemaSummary(db) {
             rowCount
         });
     }
+    // Get indexes for additional context
     const indexes = db.prepare(`
     SELECT name, tbl_name, sql 
     FROM sqlite_master 
     WHERE type='index' 
     AND name NOT LIKE 'sqlite_%'
   `).all();
+    // Log schema summary for debugging
     console.log('Schema Summary:');
     result.forEach(t => {
         console.log(`  Table: ${t.table} (${t.rowCount} rows)`);

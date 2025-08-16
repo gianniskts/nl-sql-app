@@ -1,6 +1,7 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import './styles.css';
 function App() {
     const [prompt, setPrompt] = React.useState('How many contacts do I have in my database?');
     const [resp, setResp] = React.useState(null);
@@ -29,6 +30,6 @@ function App() {
             setLoading(false);
         }
     }
-    return (_jsxs("div", { style: { padding: 16 }, children: [_jsx("h1", { children: "Natural Language \u2192 SQL" }), _jsxs("form", { onSubmit: onSubmit, children: [_jsx("textarea", { rows: 5, style: { width: '100%', fontFamily: 'monospace' }, value: prompt, onChange: (e) => setPrompt(e.target.value) }), _jsx("div", { style: { marginTop: 8 }, children: _jsx("button", { type: "submit", disabled: loading, children: loading ? 'Running…' : 'Submit' }) })] }), error && _jsx("pre", { style: { color: 'red' }, children: error }), resp && (_jsxs("div", { style: { marginTop: 16 }, children: [_jsx("h3", { children: "SQL" }), _jsx("pre", { children: resp.sql }), _jsx("h3", { children: "Summary" }), _jsx("pre", { children: resp.summary ?? '(none)' }), _jsx("h3", { children: "Rows" }), _jsx("pre", { children: JSON.stringify(resp.rows, null, 2) })] }))] }));
+    return (_jsxs("div", { className: "app", children: [_jsx("h1", { children: "Natural Language \u2192 SQL" }), _jsxs("form", { onSubmit: onSubmit, children: [_jsx("textarea", { className: "prompt", rows: 5, value: prompt, onChange: (e) => setPrompt(e.target.value) }), _jsx("div", { className: "actions", children: _jsx("button", { className: "btn", type: "submit", disabled: loading, children: loading ? 'Running…' : 'Submit' }) })] }), error && _jsx("pre", { className: "code error", children: error }), resp && (_jsxs("div", { className: "results", children: [_jsx("h3", { className: "section-title", children: "SQL" }), _jsx("pre", { className: "code", children: resp.sql }), _jsx("h3", { className: "section-title", children: "Summary" }), _jsx("pre", { className: "code", children: resp.summary ?? '(none)' }), _jsx("h3", { className: "section-title", children: "Rows" }), _jsx("pre", { className: "code", children: JSON.stringify(resp.rows, null, 2) })] }))] }));
 }
 createRoot(document.getElementById('root')).render(_jsx(App, {}));

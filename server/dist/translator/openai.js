@@ -21,6 +21,7 @@ function openAITranslator() {
      * Builds an optimized system prompt with full schema context
      */
     function buildPrompt(schema) {
+        // Use the enhanced schema description
         const schemaText = (0, schema_1.getSchemaDescription)(schema);
         // Build examples based on actual data
         const examples = [];

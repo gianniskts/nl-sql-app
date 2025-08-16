@@ -13,7 +13,7 @@ const schema_1 = require("./schema");
 const translator_1 = require("./translator");
 const zod_1 = require("zod");
 (() => {
-    const distDir = __dirname; // server/dist in prod, server/src in dev
+    const distDir = __dirname;
     const serverEnv = node_path_1.default.join(distDir, '..', '.env');
     const rootEnv = node_path_1.default.join(distDir, '..', '..', '.env');
     if (node_fs_1.default.existsSync(serverEnv)) {
