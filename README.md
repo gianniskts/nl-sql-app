@@ -40,7 +40,7 @@ The Docker setup automatically:
 - Initializes and seeds the SQLite database
 - Handles all dependencies and environment configuration
 
-## 🛠️ Local Development Setup
+## 🛠️ Local Development Setup (Option 2)
 
 ### Prerequisites
 - Node.js 18+
