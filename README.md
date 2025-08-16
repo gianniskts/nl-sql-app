@@ -14,19 +14,23 @@ A TypeScript application that translates natural language queries to SQL using O
    ```bash
    git clone https://github.com/gianniskts/nl-sql-app.git
    cd nl-sql-app
-   # Important: Place the provided .env file in the project root
    ```
 
-2. **Build and run**:
+2. **Environment setup**:
+   ```bash
+   # Place the provided .env file in the project root
+   ```
+
+3. **Build and run**:
    ```bash
    source ./setup.sh
    docker-compose up --build
    ```
 
-3. **Access the application**:
+4. **Access the application**:
    - **Web Interface**: http://localhost:3001
 
-4. **Run tests** (optional):
+5. **Run tests** (optional):
    ```bash
    # Unit tests
    docker-compose run --rm test
