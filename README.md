@@ -8,7 +8,59 @@ A TypeScript application that translates natural language queries to SQL using O
 - Docker and Docker Compose
 - `.env` file (provided separately)
 
-### Running with Docker
+## 🛠️ Local Development Setup
+
+### Prerequisites
+- Node.js 18+
+- npm 9+
+
+### Installation & Configuration
+
+1. **Install dependencies**:
+   ```bash
+   # Option 1(Better): Use the setup script
+   source ./setup.sh
+
+   # Option 2: Manual install
+   npm install
+   npm -w server install
+   npm -w client install
+   ```
+
+2. **Environment setup**:
+   ```bash
+   # Place the provided .env file in the project root
+   ```
+
+3. **Run development servers**:
+   ```bash
+   npm run dev
+   ```
+
+   This starts:
+   - **Frontend**: http://localhost:5173 (React dev server)
+   - ***Backend***: http://localhost:3001 (API + logs)
+
+4. **Access the application**:
+   - **Web Interface**: http://localhost:5173
+
+5. **Run tests**:
+   ```bash
+   # Unit tests (translator logic)
+   npm -w server run test
+
+   # Integration tests (full pipeline)
+   npm -w server run test:integration
+   ```
+
+6. ***Database setup*** (automatic):
+   ```bash
+   # Database is automatically initialized and seeded on first run
+   # To manually reseed:
+   npm -w server run seed
+   ```
+
+### Running with Docker (Option 2)
 
 1. **Clone and setup environment**:
    ```bash
@@ -45,45 +97,6 @@ The Docker setup automatically:
 - Initializes and seeds the SQLite database
 - Handles all dependencies and environment configuration
 
-## 🛠️ Local Development Setup (Option 2)
-
-### Prerequisites
-- Node.js 18+
-- npm 9+
-
-### Installation & Configuration
-
-1. **Install dependencies**:
-   ```bash
-   # Option 1: Use the setup script
-   source ./setup.sh
-
-   # Option 2: Manual install
-   npm install
-   npm -w server install
-   npm -w client install
-   ```
-
-2. **Environment setup**:
-   ```bash
-   # Place the provided .env file in the project root
-   ```
-
-3. **Run development servers**:
-   ```bash
-   npm run dev
-   ```
-   
-   This starts:
-   - **Frontend**: http://localhost:5173 (React dev server)
-   - **Backend**: http://localhost:3001 (API + logs)
-
-4. **Database setup** (automatic):
-   ```bash
-   # Database is automatically initialized and seeded on first run
-   # To manually reseed:
-   npm -w server run seed
-   ```
 
 ## 🎬 Demo Flow
 
