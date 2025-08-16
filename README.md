@@ -1,4 +1,4 @@
-# NL → SQL
+# NL → SQL Web App
 
 A TypeScript application that translates natural language queries to SQL using OpenAI's API as a comparable NL→SQL service, executes them on SQLite, and displays results with a clean React frontend.
 
@@ -12,7 +12,7 @@ A TypeScript application that translates natural language queries to SQL using O
 
 1. **Clone and setup environment**:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/gianniskts/nl-sql-app.git
    cd nl-sql-app
    # Place the provided .env file in the project root
    ```
