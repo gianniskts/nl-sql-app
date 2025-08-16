@@ -14,7 +14,7 @@ A TypeScript application that translates natural language queries to SQL using O
    ```bash
    git clone https://github.com/gianniskts/nl-sql-app.git
    cd nl-sql-app
-   # Place the provided .env file in the project root
+   # Important: Place the provided .env file in the project root
    ```
 
 2. **Build and run**:
