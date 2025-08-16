@@ -1,5 +1,6 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
+import './styles.css'
 
 function App() {
   const [prompt, setPrompt] = React.useState('How many contacts do I have in my database?')
@@ -29,30 +30,30 @@ function App() {
   }
 
   return (
-    <div style={{ padding: 16 }}>
+    <div className="app">
       <h1>Natural Language → SQL</h1>
       <form onSubmit={onSubmit}>
         <textarea
+          className="prompt"
           rows={5}
-          style={{ width: '100%', fontFamily: 'monospace' }}
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
         />
-        <div style={{ marginTop: 8 }}>
-          <button type="submit" disabled={loading}>
+        <div className="actions">
+          <button className="btn" type="submit" disabled={loading}>
             {loading ? 'Running…' : 'Submit'}
           </button>
         </div>
       </form>
-      {error && <pre style={{ color: 'red' }}>{error}</pre>}
+      {error && <pre className="code error">{error}</pre>}
       {resp && (
-        <div style={{ marginTop: 16 }}>
-          <h3>SQL</h3>
-          <pre>{resp.sql}</pre>
-          <h3>Summary</h3>
-          <pre>{resp.summary ?? '(none)'}</pre>
-          <h3>Rows</h3>
-          <pre>{JSON.stringify(resp.rows, null, 2)}</pre>
+        <div className="results">
+          <h3 className="section-title">SQL</h3>
+          <pre className="code">{resp.sql}</pre>
+          <h3 className="section-title">Summary</h3>
+          <pre className="code">{resp.summary ?? '(none)'}</pre>
+          <h3 className="section-title">Rows</h3>
+          <pre className="code">{JSON.stringify(resp.rows, null, 2)}</pre>
         </div>
       )}
     </div>
