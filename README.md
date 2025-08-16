@@ -86,13 +86,6 @@ The Docker setup automatically:
    npm -w server run seed
    ```
 
-6. **Run production build**:
-   ```bash
-   npm run build
-   npm start
-   # Access at: http://localhost:3001 (serves both API and static files)
-   ```
-
 ## 🎬 Demo Flow
 
 1. **Start Application**: 
