@@ -5,8 +5,27 @@ import type { DbSchemaSummary } from '../schema';
 const mockSchema: DbSchemaSummary = {
   dialect: 'sqlite',
   tables: [
-    { table: 'contacts', columns: ['id', 'first_name', 'last_name', 'created_at'] },
-    { table: 'cases', columns: ['id', 'topic', 'created_at'] },
+    { 
+      table: 'contacts', 
+      columns: ['id', 'first_name', 'last_name', 'created_at'],
+      columnDetails: [
+        { name: 'id', type: 'INTEGER', notnull: true, defaultValue: null, primaryKey: true },
+        { name: 'first_name', type: 'TEXT', notnull: false, defaultValue: null, primaryKey: false },
+        { name: 'last_name', type: 'TEXT', notnull: false, defaultValue: null, primaryKey: false },
+        { name: 'created_at', type: 'TEXT', notnull: false, defaultValue: null, primaryKey: false },
+      ],
+      rowCount: 127,
+    },
+    { 
+      table: 'cases', 
+      columns: ['id', 'topic', 'created_at'],
+      columnDetails: [
+        { name: 'id', type: 'INTEGER', notnull: true, defaultValue: null, primaryKey: true },
+        { name: 'topic', type: 'TEXT', notnull: false, defaultValue: null, primaryKey: false },
+        { name: 'created_at', type: 'TEXT', notnull: false, defaultValue: null, primaryKey: false },
+      ],
+      rowCount: 5,
+    },
   ],
 };
 

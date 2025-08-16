@@ -1,11 +1,26 @@
-import 'dotenv/config';
+import fs from 'node:fs';
+import path from 'node:path';
+import dotenv from 'dotenv';
 import express, { type Request, type Response } from 'express';
 import cors from 'cors';
-import path from 'path';
 import { db, runMigrations } from './db';
 import { getSchemaSummary } from './schema';
 import { chooseTranslator } from './translator';
 import { z } from 'zod';
+
+(() => {
+  const distDir = __dirname;
+  const serverEnv = path.join(distDir, '..', '.env');
+  const rootEnv = path.join(distDir, '..', '..', '.env');
+
+  if (fs.existsSync(serverEnv)) {
+    dotenv.config({ path: serverEnv });
+  } else if (fs.existsSync(rootEnv)) {
+    dotenv.config({ path: rootEnv });
+  } else {
+    dotenv.config();
+  }
+})();
 
 const PORT = Number(process.env.PORT || 3001);
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
@@ -13,9 +28,9 @@ const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const app = express();
 
 // CORS configuration
-app.use(cors({ 
+app.use(cors({
   origin: process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:5173', 'http://localhost:3001'],
-  credentials: false 
+  credentials: false
 }));
 
 app.use(express.json());
@@ -60,7 +75,7 @@ runMigrations();
 
 // Health check endpoint
 app.get('/api/health', (_req: Request, res: Response) => {
-  res.json({ 
+  res.json({
     ok: true,
     translator: process.env.OPENAI_API_KEY ? 'openai' : 'rulebased',
     database: 'sqlite',
@@ -69,16 +84,16 @@ app.get('/api/health', (_req: Request, res: Response) => {
 });
 
 // Main query endpoint
-const QueryBody = z.object({ 
-  prompt: z.string().min(1).max(1000) 
+const QueryBody = z.object({
+  prompt: z.string().min(1).max(1000)
 });
 
 app.post('/api/query', async (req: Request, res: Response) => {
   const parsed = QueryBody.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ 
-      error: 'Invalid request', 
-      details: parsed.error.flatten() 
+    return res.status(400).json({
+      error: 'Invalid request',
+      details: parsed.error.flatten()
     });
   }
 
@@ -88,13 +103,13 @@ app.post('/api/query', async (req: Request, res: Response) => {
     // Get schema and translator
     const schema = getSchemaSummary(db);
     const translator = chooseTranslator();
-    
+
     // Translate to SQL
     console.log('\n--- NL Prompt ---');
     console.log(prompt);
-    
+
     const { sql, rationale } = await translator.translate(prompt, schema);
-    
+
     console.log('--- Generated SQL ---');
     console.log(sql);
     console.log(`--- Translator: ${rationale} ---`);
@@ -103,9 +118,9 @@ app.post('/api/query', async (req: Request, res: Response) => {
     const normalizedSql = sql.trim().toLowerCase();
     if (!normalizedSql.startsWith('select') && !normalizedSql.startsWith('with')) {
       console.log('--- BLOCKED: Non-SELECT query ---');
-      return res.status(400).json({ 
-        error: 'Only SELECT queries are allowed for safety', 
-        sql 
+      return res.status(400).json({
+        error: 'Only SELECT queries are allowed for safety',
+        sql
       });
     }
 
@@ -122,7 +137,7 @@ app.post('/api/query', async (req: Request, res: Response) => {
         // Try common count aliases
         const countValue = firstRow.count ?? firstRow.COUNT ?? firstRow.c ?? Object.values(firstRow)[0];
         const count = Number(countValue);
-        
+
         if (!Number.isNaN(count)) {
           // Determine subject from prompt
           let subject = 'results';
@@ -131,7 +146,7 @@ app.post('/api/query', async (req: Request, res: Response) => {
           } else if (lowerPrompt.includes('case')) {
             subject = count === 1 ? 'case' : 'cases';
           }
-          
+
           summary = `${count} ${subject}`;
         }
       }
@@ -144,20 +159,20 @@ app.post('/api/query', async (req: Request, res: Response) => {
     }
 
     // Return response
-    res.json({ 
-      sql, 
-      rows, 
-      summary, 
-      rationale 
+    res.json({
+      sql,
+      rows,
+      summary,
+      rationale
     });
 
   } catch (error: any) {
     console.error('--- Error ---');
     console.error(error);
-    
-    res.status(500).json({ 
-      error: 'Failed to process query', 
-      details: error?.message ?? String(error) 
+
+    res.status(500).json({
+      error: 'Failed to process query',
+      details: error?.message ?? String(error)
     });
   }
 });
@@ -166,7 +181,7 @@ app.post('/api/query', async (req: Request, res: Response) => {
 if (IS_PRODUCTION) {
   const clientPath = path.join(__dirname, '../../client/dist');
   app.use(express.static(clientPath));
-  
+
   // Fallback to index.html for client-side routing
   app.get('*', (_req: Request, res: Response) => {
     res.sendFile(path.join(clientPath, 'index.html'));

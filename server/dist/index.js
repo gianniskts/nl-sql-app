@@ -3,14 +3,29 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-require("dotenv/config");
+const node_fs_1 = __importDefault(require("node:fs"));
+const node_path_1 = __importDefault(require("node:path"));
+const dotenv_1 = __importDefault(require("dotenv"));
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
-const path_1 = __importDefault(require("path"));
 const db_1 = require("./db");
 const schema_1 = require("./schema");
 const translator_1 = require("./translator");
 const zod_1 = require("zod");
+(() => {
+    const distDir = __dirname; // server/dist in prod, server/src in dev
+    const serverEnv = node_path_1.default.join(distDir, '..', '.env');
+    const rootEnv = node_path_1.default.join(distDir, '..', '..', '.env');
+    if (node_fs_1.default.existsSync(serverEnv)) {
+        dotenv_1.default.config({ path: serverEnv });
+    }
+    else if (node_fs_1.default.existsSync(rootEnv)) {
+        dotenv_1.default.config({ path: rootEnv });
+    }
+    else {
+        dotenv_1.default.config();
+    }
+})();
 const PORT = Number(process.env.PORT || 3001);
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const app = (0, express_1.default)();
@@ -146,11 +161,11 @@ app.post('/api/query', async (req, res) => {
 });
 // Serve static files in production
 if (IS_PRODUCTION) {
-    const clientPath = path_1.default.join(__dirname, '../../client/dist');
+    const clientPath = node_path_1.default.join(__dirname, '../../client/dist');
     app.use(express_1.default.static(clientPath));
     // Fallback to index.html for client-side routing
     app.get('*', (_req, res) => {
-        res.sendFile(path_1.default.join(clientPath, 'index.html'));
+        res.sendFile(node_path_1.default.join(clientPath, 'index.html'));
     });
 }
 // Start server
