@@ -1,4 +1,4 @@
-# NL → SQL via OpenAI (TypeScript)
+# NL → SQL
 
 A TypeScript application that translates natural language queries to SQL using OpenAI's API as a comparable NL→SQL service, executes them on SQLite, and displays results with a clean React frontend.
 
