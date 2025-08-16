@@ -69,17 +69,7 @@ The Docker setup automatically:
    # Place the provided .env file in the project root
    ```
 
-3. **Required environment variables** (in `.env`):
-   ```bash
-   PORT=3001
-   CORS_ORIGIN=http://localhost:5173
-   OPENAI_API_KEY=your-openai-api-key
-   OPENAI_MODEL=gpt-4o-mini                  
-   OPENAI_BASE_URL=https://api.openai.com/v1 
-   TRANSLATOR=openai                         # 'openai' or 'rulebased'
-   ```
-
-4. **Run development servers**:
+3. **Run development servers**:
    ```bash
    npm run dev
    ```
@@ -88,7 +78,7 @@ The Docker setup automatically:
    - **Frontend**: http://localhost:5173 (React dev server)
    - **Backend**: http://localhost:3001 (API + logs)
 
-5. **Database setup** (automatic):
+4. **Database setup** (automatic):
    ```bash
    # Database is automatically initialized and seeded on first run
    # To manually reseed:
