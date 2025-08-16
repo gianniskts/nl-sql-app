@@ -19,6 +19,7 @@ A TypeScript application that translates natural language queries to SQL using O
 
 2. **Build and run**:
    ```bash
+   source ./setup.sh
    docker-compose up --build
    ```
 
@@ -50,6 +51,10 @@ The Docker setup automatically:
 
 1. **Install dependencies**:
    ```bash
+   # Option 1: Use the setup script
+   source ./setup.sh
+
+   # Option 2: Manual install
    npm install
    npm -w server install
    npm -w client install
